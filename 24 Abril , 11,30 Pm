@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- BLOQUEO DE ZOOM: maximum-scale=1.0 y user-scalable=no -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Comfort Life | Salud Integral Bolivia</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --comfort-blue: #1e3a8a;
+            --comfort-light: #f8fafc;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--comfort-light);
+            scroll-behavior: smooth;
+            /* Prevención de selección de texto a nivel global para mayor sensación de App */
+            -webkit-user-select: none;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* PERMITIR SELECCIÓN EN INPUTS Y TEXTAREAS */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        /* PROTECCIÓN DE IMÁGENES: Evita arrastre y menú contextual en móviles */
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+            -webkit-touch-callout: none;
+        }
+
+        .text-comfort { color: var(--comfort-blue); }
+        .bg-comfort { background-color: var(--comfort-blue); }
+
+        #mobile-drawer { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drawer-open { transform: translateX(0) !important; }
+        
+        .product-card { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .product-card:hover { transform: translateY(-12px); box-shadow: 0 40px 60px -15px rgba(30, 58, 138, 0.15); }
+
+        .admin-tab-active { color: var(--comfort-blue); border-bottom: 3px solid var(--comfort-blue); font-weight: 800; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        details summary::-webkit-details-marker { display: none; }
+
+        .img-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .img-carousel::-webkit-scrollbar { display: none; }
+        .img-carousel img {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+            object-fit: cover;
+        }
+
+        .safe-iframe-wrapper {
+            width: 100%;
+            height: 800px;
+            overflow: hidden;
+            border-radius: 2rem;
+            background: white;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        #safe-frame-container { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+
+        .pulse-img { animation: soft-pulse 4s infinite ease-in-out; }
+        @keyframes soft-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+        #product-modal-container { transition: all 0.3s ease-out; }
+        .modal-show { opacity: 1 !important; pointer-events: auto !important; transform: scale(1) !important; }
+        
+        /* Flex grow para empujar el footer abajo */
+        main { flex-grow: 1; }
+    </style>
+</head>
+<body class="text-slate-900" oncontextmenu="return false;">
+
+    <nav class="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-sm px-4 lg:px-8">
+        <div class="max-w-7xl mx-auto h-16 lg:h-20 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showSection('home')">
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-comfort rounded-xl lg:rounded-2xl flex items-center justify-center text-white font-black text-xl lg:text-2xl shadow-lg">CL</div>
+                <div class="leading-none text-left">
+                    <span class="block font-black text-lg lg:text-xl text-comfort uppercase tracking-tighter italic">ComfortLife</span>
+                    <span class="text-[8px] lg:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">BOLIVIA</span>
+                </div>
+            </div>
+
+            <div class="hidden lg:flex items-center gap-8 font-black text-[10px] uppercase tracking-widest text-slate-500" id="pc-nav"></div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="openAuthModal()" class="hidden md:block px-6 py-2.5 rounded-full border-2 border-slate-100 text-[10px] font-black uppercase hover:border-comfort transition">Admin</button>
+                <button onclick="toggleDrawer()" class="lg:hidden p-2 bg-slate-100 rounded-xl text-comfort">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="drawer-overlay" onclick="toggleDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[150] opacity-0 pointer-events-none hidden transition-opacity duration-300"></div>
+    <div id="mobile-drawer" class="fixed top-0 right-0 h-full w-[320px] bg-white z-[200] shadow-2xl translate-x-full overflow-y-auto">
+        <div class="p-6 lg:p-8 border-b border-slate-50 flex justify-between items-center sticky top-0 bg-white">
+            <span class="font-black text-comfort italic uppercase text-lg text-left">ComfortLife</span>
+            <button onclick="toggleDrawer()" class="text-slate-300 hover:text-comfort p-2">✕</button>
+        </div>
+        <div class="p-6 lg:p-8 space-y-10" id="mobile-nav-dynamic"></div>
+    </div>
+
+    <main>
+        <section id="section-home" class="animate-in fade-in duration-500">
+            <!-- HERO ESPACIOS REDUCIDOS -->
+            <div class="max-w-7xl mx-auto px-4 lg:px-6 py-4 lg:py-10 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center text-left">
+                <div class="space-y-4 lg:space-y-6 italic">
+                    <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-slate-900">Salud en <span class="text-blue-600">Cada Paso</span></h1>
+                    <p class="text-sm lg:text-lg font-medium text-slate-500 leading-relaxed max-w-lg italic">Expertos en Bolivia en soluciones ortopédicas avanzadas diseñadas para el alivio plantar y corrección postural.</p>
+                    <div class="flex flex-wrap gap-2 lg:gap-4 pt-2">
+                        <button onclick="showSection('catalog')" class="px-6 py-3 lg:px-8 lg:py-4 bg-comfort text-white rounded-full font-black uppercase text-[9px] lg:text-[10px] tracking-widest shadow-xl hover:scale-105 transition-all">Explorar Catálogo</button>
+                        <button onclick="document.getElementById('home-ai-section').scrollIntoView({behavior: 'smooth'})" class="px-6 py-3 lg:px-8 lg:py-4 border-2 border-blue-100 text-blue-600 rounded-full font-black uppercase text-[9px] lg:text-[10px] tracking-widest hover:bg-blue-50 transition-all flex items-center gap-2 italic">Asistente ComfortLife IA ✨</button>
+                    </div>
+                </div>
+                <div class="relative flex justify-center lg:justify-end mt-4 lg:mt-0">
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-blue-100 rounded-[3rem] blur-2xl opacity-40 group-hover:opacity-60 transition-all"></div>
+                        <img src="https://images.unsplash.com/photo-1519415510236-85592ac7530b?auto=format&fit=crop&q=80&w=600" class="relative w-full max-w-[280px] lg:max-w-md rounded-[2.5rem] shadow-2xl border-4 lg:border-8 border-white pulse-img object-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CÁPSULA IA COMPACTA -->
+            <div id="home-ai-section" class="max-w-4xl mx-auto px-4 lg:px-6 py-2">
+                <div class="bg-white rounded-[2rem] lg:rounded-full shadow-lg border border-slate-100 overflow-hidden flex flex-col lg:flex-row items-center p-2 lg:p-2.5 gap-2 italic">
+                    <div class="bg-comfort text-white px-4 py-2 lg:py-3 rounded-full flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto shadow-inner">
+                        <span class="text-sm">✨</span>
+                        <span class="font-black uppercase tracking-widest text-[9px]">Asistente IA</span>
+                    </div>
+                    <div class="flex-grow w-full flex flex-col">
+                        <div id="ai-messages-embedded" class="max-h-[120px] overflow-y-auto px-2 py-1 text-[10px] space-y-1.5 no-scrollbar flex flex-col">
+                            <div class="text-slate-500 font-bold self-start bg-slate-50 px-3 py-1.5 rounded-xl rounded-tl-none border border-slate-100 shadow-sm">¡Hola! ¿En qué te puedo ayudar hoy de forma rápida?</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full lg:w-[320px] shrink-0 mt-1 lg:mt-0">
+                        <input type="text" id="ai-input-embedded" class="flex-grow px-4 py-2.5 bg-slate-50 text-[10px] lg:text-xs font-bold outline-none rounded-full border border-slate-100 focus:border-blue-200 transition" placeholder="Escribe tu consulta..." onkeypress="if(event.key === 'Enter') window.askAI('embedded')">
+                        <button onclick="window.askAI('embedded')" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0 hover:bg-blue-100 transition shadow-sm font-black">➤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORÍAS REDUCIDAS -->
+            <div class="py-6 lg:py-12 bg-white mt-4 rounded-t-[2.5rem] lg:rounded-t-[4rem]">
+                <div class="max-w-7xl mx-auto px-4 lg:px-6">
+                    <div class="mb-4 lg:mb-8 text-center italic">
+                        <h2 class="text-3xl lg:text-4xl font-black text-slate-900 uppercase tracking-tighter">Líneas de Cuidado</h2>
+                        <div class="w-16 h-1.5 bg-comfort mx-auto mt-3 rounded-full"></div>
+                    </div>
+                    <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-8"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-catalog" class="hidden py-6 lg:py-10 px-4 lg:px-6 max-w-7xl mx-auto">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6 italic text-left">
+                <div class="space-y-1 text-center lg:text-left">
+                    <h2 class="text-4xl lg:text-6xl font-black text-slate-900 uppercase tracking-tighter leading-none">Catálogo</h2>
+                    <p class="text-slate-400 font-bold uppercase tracking-[0.3em] text-[8px] lg:text-[9px]">Encuentra tu solución</p>
+                </div>
+                <div class="w-full lg:w-96 relative">
+                    <input type="text" id="catalog-search" oninput="window.filterCatalogUI()" placeholder="🔍 Buscar producto..." class="w-full p-3.5 lg:p-5 bg-white border border-slate-100 rounded-full text-xs italic outline-none shadow-sm focus:ring-4 focus:ring-blue-50">
+                </div>
+            </div>
+            <div id="filter-bar" class="flex flex-wrap gap-1.5 lg:gap-2 justify-center mb-6 italic"></div>
+            <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-6"></div>
+        </section>
+
+        <section id="section-custom" class="hidden py-6 lg:py-10 px-4 lg:px-6 max-w-7xl mx-auto animate-in slide-in-from-right duration-500 italic text-left">
+            <div class="flex justify-between items-center mb-4 lg:mb-6">
+                <button onclick="showSection('catalog')" class="flex items-center gap-2 text-slate-400 font-black uppercase text-[9px] lg:text-[10px] hover:text-comfort transition group">
+                    <span class="group-hover:-translate-x-1 transition-transform">←</span> Volver al catálogo
+                </button>
+                <button id="custom-share-btn" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-[9px] font-black uppercase shadow-sm hover:bg-slate-200 transition flex items-center gap-1.5">🔗 Compartir</button>
+            </div>
+            <div id="custom-renderer" class="prose prose-slate max-w-none text-sm lg:text-base"></div>
+        </section>
+
+        <!-- Admin Panel, Modals, Toasts go here (unchanged logic structure) -->
+        
+        <div id="product-modal-container" class="fixed inset-0 z-[350] bg-slate-900/80 backdrop-blur-md opacity-0 pointer-events-none hidden flex items-center justify-center p-3 lg:p-6">
+            <div class="bg-white w-full max-w-4xl rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl overflow-hidden transform scale-90 transition-all duration-300 relative">
+                <button onclick="closeProductModal()" class="absolute top-3 right-3 lg:top-4 lg:right-6 text-slate-300 hover:text-comfort text-2xl z-50 bg-white/50 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center">✕</button>
+                <div id="modal-content" class="p-4 lg:p-12 italic text-left max-h-[90vh] overflow-y-auto no-scrollbar"></div>
+            </div>
+        </div>
+
+        <!-- Modales de Plantillas (Logística, FAQ, Envíos/Pagos) -->
+        <div id="template-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-2xl rounded-[2.5rem] lg:rounded-[3.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 italic text-left flex flex-col max-h-[90vh]">
+                <div class="p-6 lg:p-8 border-b flex justify-between items-center bg-slate-50/50 shrink-0">
+                    <h3 class="font-black text-xl lg:text-2xl text-comfort uppercase tracking-tighter">Plantilla Logística</h3>
+                    <button onclick="window.closeTemplateModal()" class="text-slate-300 text-3xl">✕</button>
+                </div>
+                <form id="template-form" class="p-6 lg:p-10 space-y-6 overflow-y-auto no-scrollbar flex-grow">
+                    <input type="hidden" id="temp-id">
+                    <input type="text" id="temp-name" required placeholder="Nombre (Ej: Envíos Nacionales)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none font-bold italic text-left">
+                    <div class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 space-y-4">
+                        <label class="text-[10px] font-black uppercase text-blue-600 tracking-widest">Bloques de Información</label>
+                        <div id="template-blocks-container" class="space-y-2"></div>
+                        <button type="button" onclick="window.addTemplateBlock()" class="w-full py-3 bg-white border shadow-sm rounded-xl font-black text-[10px] text-blue-600 uppercase">+ Añadir Bloque</button>
+                    </div>
+                    <button type="submit" class="w-full py-5 bg-comfort text-white rounded-3xl font-black uppercase tracking-widest shadow-xl">Guardar Plantilla</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="faq-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 italic text-left flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b flex justify-between items-center bg-emerald-50/50 shrink-0">
+                    <h3 class="font-black text-xl text-emerald-700 uppercase tracking-tighter">Plantilla FAQ</h3>
+                    <button onclick="window.closeFaqModal()" class="text-slate-300 hover:text-emerald-500 text-3xl transition">✕</button>
+                </div>
+                <form id="faq-form" class="p-6 space-y-6 overflow-y-auto no-scrollbar flex-grow">
+                    <input type="hidden" id="faq-id">
+                    <input type="text" id="faq-name" required placeholder="Nombre FAQ" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none font-bold italic text-left">
+                    <div class="bg-emerald-50/40 p-6 rounded-[2rem] border border-emerald-100 space-y-4">
+                        <div id="faq-blocks-container" class="space-y-4"></div>
+                        <button type="button" onclick="window.addFaqBlock()" class="w-full py-3 bg-white border shadow-sm rounded-xl font-black text-[10px] text-emerald-600 uppercase">+ Añadir Pregunta</button>
+                    </div>
+                    <button type="submit" class="w-full py-5 bg-emerald-600 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl">Guardar FAQ</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="admin-policy-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 italic text-left flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b flex justify-between items-center bg-indigo-50/50 shrink-0">
+                    <h3 class="font-black text-xl text-indigo-700 uppercase tracking-tighter">Plantilla Envíos / Pagos</h3>
+                    <button onclick="window.closeAdminPolicyModal()" class="text-slate-300 text-3xl transition">✕</button>
+                </div>
+                <form id="policy-form" class="p-6 space-y-6 overflow-y-auto no-scrollbar flex-grow">
+                    <input type="hidden" id="pol-id">
+                    <input type="text" id="pol-name" required placeholder="Nombre (Ej: Estándar Nacional)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none font-bold italic">
+                    
+                    <div class="bg-blue-50/40 p-5 rounded-2xl border border-blue-100 space-y-3">
+                        <h4 class="text-[10px] font-black uppercase text-blue-600 tracking-widest">Envíos Bolivia</h4>
+                        <textarea id="pol-ship-txt" class="w-full p-3 bg-white rounded-xl border outline-none text-xs italic min-h-[80px]"></textarea>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="pol-ship-img" placeholder="URL Imagen..." class="flex-grow p-2.5 bg-white border rounded-lg text-[10px] italic outline-none">
+                            <label class="bg-white text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase cursor-pointer shadow-sm shrink-0">📷<input type="file" class="hidden" accept="image/*" onchange="window.handlePolicyImg(this, 'pol-ship-img')"></label>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100 space-y-3">
+                        <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Formas de Pago</h4>
+                        <textarea id="pol-pay-txt" class="w-full p-3 bg-white rounded-xl border outline-none text-xs italic min-h-[80px]"></textarea>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="pol-pay-img" placeholder="URL Imagen QR..." class="flex-grow p-2.5 bg-white border rounded-lg text-[10px] italic outline-none">
+                            <label class="bg-white text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase cursor-pointer shadow-sm shrink-0">📷<input type="file" class="hidden" accept="image/*" onchange="window.handlePolicyImg(this, 'pol-pay-img')"></label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl">Guardar</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="confirm-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[600] hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in duration-200 italic">
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-[2rem] flex items-center justify-center mx-auto mb-4 text-3xl">⚠️</div>
+                <h3 class="text-xl font-black text-slate-900 mb-2 uppercase tracking-tighter">¿Eliminar?</h3>
+                <div class="flex gap-4 mt-6">
+                    <button onclick="window.closeConfirmModal()" class="flex-1 py-3 bg-slate-50 text-slate-500 border rounded-xl font-black uppercase text-[10px]">Cancelar</button>
+                    <button id="confirm-btn-action" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-black uppercase text-[10px]">Borrar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="size-guide-modal" class="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none hidden flex items-center justify-center p-4 transition-opacity duration-300" onclick="if(event.target === this) closeSizeGuide()">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden transform scale-90 transition-all duration-300 p-6 italic text-center relative" id="size-guide-content-box"></div>
+        </div>
+
+        <div id="client-policy-modal" class="fixed inset-0 z-[500] bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none hidden flex items-center justify-center p-4 transition-opacity duration-300" onclick="if(event.target === this) window.closeClientPolicy()">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden transform scale-90 transition-all duration-300 p-6 italic text-center relative" id="client-policy-content-box"></div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="view-admin" class="hidden py-6 px-4 lg:px-6 max-w-7xl mx-auto animate-in fade-in duration-300 italic text-left">
+            <div class="flex flex-wrap border-b-2 border-slate-50 mb-6 gap-4 lg:gap-10 no-scrollbar overflow-x-auto">
+                <button onclick="setAdminTab('inventory')" id="tab-inventory" class="pb-4 text-[9px] font-black uppercase tracking-widest admin-tab-active">Inventario</button>
+                <button onclick="setAdminTab('attributes')" id="tab-attributes" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Atributos</button>
+                <button onclick="setAdminTab('templates')" id="tab-templates" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Logística</button>
+                <button onclick="setAdminTab('policies')" id="tab-policies" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Envíos/Pagos</button>
+                <button onclick="setAdminTab('faqs')" id="tab-faqs" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">FAQ</button>
+                <button onclick="setAdminTab('pages')" id="tab-pages" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Páginas</button>
+                <button onclick="setAdminTab('ai-config')" id="tab-ai-config" class="pb-4 text-[9px] font-black uppercase tracking-widest text-slate-400">IA</button>
+                <button onclick="logout()" class="pb-4 text-[9px] font-black uppercase tracking-widest text-red-500 ml-auto">Salir</button>
+            </div>
+
+            <div id="admin-inventory" class="admin-pane space-y-6">
+                <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <h2 class="text-2xl font-black uppercase text-comfort">Stock Maestro</h2>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <input type="text" id="admin-kw" oninput="window.renderAdminProducts()" placeholder="Buscar..." class="p-3 bg-slate-50 border rounded-xl text-xs outline-none flex-grow italic">
+                        <select id="admin-filter-cat" onchange="window.renderAdminProducts()" class="p-3 bg-slate-50 border rounded-xl text-xs admin-cat-select font-bold italic"></select>
+                        <select id="admin-filter-badge" onchange="window.renderAdminProducts()" class="p-3 bg-slate-50 border rounded-xl text-xs admin-badge-select font-bold italic"></select>
+                        <button onclick="window.seedDatabase()" class="bg-blue-50 text-blue-600 px-3 rounded-xl font-black text-[9px] uppercase shadow-sm tracking-widest">Carga</button>
+                        <button onclick="openEditModal('prod')" class="bg-comfort text-white px-4 rounded-xl font-black text-[9px] uppercase shadow-md tracking-widest">Nuevo</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm overflow-x-auto">
+                    <table class="w-full text-left italic min-w-[500px]">
+                        <thead class="bg-slate-50 border-b italic">
+                            <tr class="text-[9px] font-black uppercase text-slate-400">
+                                <th class="px-4 py-4">Producto</th>
+                                <th class="px-4 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-products-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Otros paneles de admin se mantienen idénticos (attributes, templates, policies, faqs, pages, ai-config) -->
+            <div id="admin-attributes" class="admin-pane hidden space-y-8">
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-[2rem] border shadow-sm space-y-4">
+                        <h3 class="text-lg font-black uppercase text-comfort italic">Categorías</h3>
+                        <div class="flex flex-col gap-2">
+                            <input type="hidden" id="edit-cat-id">
+                            <div class="flex gap-2">
+                                <input type="text" id="new-cat-name" placeholder="Nombre" class="flex-grow p-3 bg-slate-50 border rounded-xl outline-none text-xs font-bold italic">
+                                <input type="color" id="new-cat-color" value="#1e3a8a" class="w-10 h-10 p-0.5 bg-white border rounded-xl cursor-pointer shadow-inner shrink-0">
+                            </div>
+                            <select id="new-cat-template" class="p-3 bg-slate-50 border rounded-xl outline-none text-[10px] font-bold italic admin-template-select"></select>
+                            <select id="new-cat-faq" class="p-3 bg-slate-50 border rounded-xl outline-none text-[10px] font-bold italic admin-faq-select"></select>
+                            <button onclick="window.addAttribute('categories')" class="w-full py-3 bg-comfort text-white rounded-xl font-black uppercase text-[9px] tracking-widest italic mt-1">Guardar</button>
+                        </div>
+                        <div id="list-categories" class="space-y-2 mt-4 max-h-60 overflow-y-auto no-scrollbar"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-[2rem] border shadow-sm space-y-4">
+                        <h3 class="text-lg font-black uppercase text-comfort italic">Etiquetas / Badges</h3>
+                        <div class="flex flex-col gap-2">
+                            <input type="hidden" id="edit-badge-id">
+                            <div class="flex gap-2">
+                                <input type="text" id="new-badge-name" placeholder="Nombre" class="flex-grow p-3 bg-slate-50 border rounded-xl outline-none text-xs font-bold italic">
+                                <input type="color" id="new-badge-color" value="#1e3a8a" class="w-10 h-10 p-0.5 bg-white border rounded-xl cursor-pointer shadow-inner shrink-0">
+                            </div>
+                            <button onclick="window.addAttribute('badges')" class="w-full py-3 bg-comfort text-white rounded-xl font-black uppercase text-[9px] tracking-widest italic mt-1">Guardar</button>
+                        </div>
+                        <div id="list-badges" class="space-y-2 mt-4 max-h-60 overflow-y-auto no-scrollbar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-templates" class="admin-pane hidden space-y-6">
+                <div class="flex justify-between items-center italic">
+                    <h3 class="text-xl font-black uppercase tracking-tighter">Plantillas Logística</h3>
+                    <button onclick="window.openTemplateModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest">Nueva</button>
+                </div>
+                <div id="admin-templates-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div id="admin-policies" class="admin-pane hidden space-y-6">
+                <div class="flex justify-between items-center italic">
+                    <h3 class="text-xl font-black uppercase tracking-tighter">Envíos y Pagos</h3>
+                    <button onclick="window.openAdminPolicyModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest">Nueva</button>
+                </div>
+                <div id="admin-policies-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div id="admin-faqs" class="admin-pane hidden space-y-6">
+                <div class="flex justify-between items-center italic">
+                    <h3 class="text-xl font-black uppercase tracking-tighter">Preguntas (FAQ)</h3>
+                    <button onclick="window.openFaqModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest">Nueva</button>
+                </div>
+                <div id="admin-faqs-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div id="admin-pages" class="admin-pane hidden space-y-6">
+                <div class="flex justify-between items-center italic">
+                    <h3 class="text-xl font-black uppercase tracking-tighter">Páginas</h3>
+                    <button onclick="openEditModal('page')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest">Nueva</button>
+                </div>
+                <div id="admin-pages-list" class="space-y-3"></div>
+            </div>
+
+            <div id="admin-ai-config" class="admin-pane hidden max-w-2xl mx-auto italic space-y-6 text-center">
+                <h3 class="font-black text-[10px] uppercase tracking-widest text-comfort">Personalidad IA</h3>
+                <textarea id="ai-prompt-config" class="w-full p-5 bg-slate-50 border rounded-2xl h-40 outline-none text-xs italic"></textarea>
+                <button onclick="window.saveAIConfig()" class="w-full py-3 bg-comfort text-white rounded-xl font-black uppercase text-[10px] tracking-widest mt-2">Actualizar IA</button>
+            </div>
+        </div>
+
+        <!-- Edit Modal Universal -->
+        <div id="edit-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[400] hidden flex items-center justify-center p-3 lg:p-6">
+            <div class="bg-white w-full max-w-5xl rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 italic text-left flex flex-col max-h-[95vh] lg:max-h-[90vh]">
+                <div class="p-5 lg:p-8 border-b flex justify-between items-center bg-slate-50/50 shrink-0">
+                    <h3 id="edit-modal-title" class="font-black text-xl lg:text-2xl text-comfort uppercase tracking-tighter">Editor</h3>
+                    <button onclick="closeEditModal()" class="text-slate-300 hover:text-comfort transition text-2xl w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm">✕</button>
+                </div>
+                <div class="p-5 lg:p-8 overflow-y-auto no-scrollbar flex-grow" id="edit-form-container"></div>
+            </div>
+        </div>
+
+        <!-- Login -->
+        <div id="auth-modal" class="fixed inset-0 bg-blue-900/60 backdrop-blur-2xl z-[450] hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 lg:p-12 text-center italic">
+                <h3 class="text-2xl font-black text-slate-900 mb-8 uppercase tracking-tighter leading-none">Admin</h3>
+                <input type="password" id="auth-pass" placeholder="••••••••" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-black text-center text-2xl tracking-[0.4em] shadow-inner mb-6">
+                <button onclick="window.handleLogin()" class="w-full py-4 bg-comfort text-white rounded-2xl font-black uppercase shadow-xl tracking-widest text-xs">Entrar</button>
+                <button onclick="closeAuthModal()" class="mt-4 text-slate-400 font-bold uppercase text-[9px] tracking-widest cursor-pointer p-2">Cerrar</button>
+            </div>
+        </div>
+
+        <div id="toast" class="fixed bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-900 text-white rounded-full text-[9px] lg:text-[10px] font-black uppercase translate-y-28 transition-transform z-[500] italic text-center whitespace-nowrap shadow-2xl border border-slate-700"></div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-comfort text-white pt-10 pb-6 px-4 lg:px-8 italic text-center rounded-t-[2.5rem] lg:rounded-t-[4rem] mt-6 lg:mt-12 shrink-0 border-t-4 border-blue-800">
+        <div class="max-w-4xl mx-auto space-y-4">
+            <h3 class="text-2xl lg:text-3xl font-black uppercase tracking-tighter leading-none">ComfortLife Bolivia</h3>
+            <p class="text-[10px] lg:text-xs font-medium text-blue-100 leading-relaxed max-w-2xl mx-auto">
+                Cuidar de tu salud de forma preventiva y correctiva es el primer paso hacia una vida plena. Nuestras soluciones ortopédicas están diseñadas para brindarte alivio, estabilidad y bienestar integral en cada paso que das.
+            </p>
+            <div class="w-16 h-1 bg-blue-400/30 mx-auto rounded-full my-6"></div>
+            <p class="text-[9px] font-black uppercase tracking-widest text-blue-200">
+                ComfortLife Hecho con Ayuda de DIOS
+            </p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, addDoc, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'comfort-life-master-v2-10';
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const apiKey = ""; 
+
+        let products = [], categories = [], badges = [], pages = [], templates = [], faqs = [], policies = [];
+        let aiSystemPrompt = "Eres el experto en ortopedia de Comfort Life Bolivia. TUS RESPUESTAS DEBEN SER MUY BREVES, CONCISAS Y DIRECTAS (Máximo 2 párrafos cortos). Sé amable, claro y ayuda al cliente.";
+        let currentUser = null;
+        let currentCatFilter = 'Todos';
+        let isDeepLinkProcessed = false;
+
+        function getImgArray(val) {
+            if(!val) return [];
+            try { 
+                const parsed = JSON.parse(val); 
+                return Array.isArray(parsed) ? parsed : [val];
+            } catch(e) { return [val]; }
+        }
+
+        async function compressImage(base64Str, maxWidth = 600, quality = 0.5) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height;
+                    if (width > maxWidth) { height = (maxWidth / width) * height; width = maxWidth; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+            });
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return true;
+                } catch (err2) {
+                    document.body.removeChild(textArea);
+                    return false;
+                }
+            }
+        }
+
+        window.shareLink = async (type, identifier, event) => {
+            if (event) { event.stopPropagation(); event.preventDefault(); }
+            let baseUrl = window.location.origin + window.location.pathname;
+            let finalUrl = `${baseUrl}?${type}=${encodeURIComponent(identifier)}`;
+            const shareData = { title: 'Comfort Life Bolivia', text: 'Mira esto en Comfort Life:', url: finalUrl };
+
+            try {
+                if (navigator.share) await navigator.share(shareData);
+                else { await copyToClipboard(finalUrl); window.showToast("Enlace copiado 🔗"); }
+            } catch (err) {
+                await copyToClipboard(finalUrl); window.showToast("Copiado al portapapeles 📋");
+            }
+        };
+
+        window.processDeepLink = () => {
+            if(isDeepLinkProcessed || products.length === 0) return;
+            const params = new URLSearchParams(window.location.search);
+            if(params.has('product')) { window.openProductFullLanding(params.get('product')); isDeepLinkProcessed = true; }
+            else if (params.has('category')) { window.goToCategory(params.get('category')); isDeepLinkProcessed = true; }
+            else if (params.has('page')) { window.showSection('custom', params.get('page')); isDeepLinkProcessed = true; }
+        };
+        
+        function buildFaqHtml(faqId) {
+            if (!faqId) return "";
+            const faqData = faqs.find(f => f.id === faqId);
+            if (!faqData || !faqData.questions) return "";
+            let qList = [];
+            try { qList = JSON.parse(faqData.questions); } catch(e) {}
+            if (qList.length === 0) return "";
+
+            let html = `<div class="mt-3 lg:mt-6 mb-4 lg:mb-8 bg-white border border-slate-100 rounded-[1.5rem] lg:rounded-3xl shadow-sm p-3 lg:p-6 italic text-left max-w-3xl mx-auto w-full">
+                <h4 class="text-[9px] lg:text-xs font-black uppercase text-emerald-600 mb-2 tracking-widest border-b border-slate-50 pb-2 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Preguntas Frecuentes</h4>
+                <div class="flex flex-col">`;
+            
+            qList.forEach(item => {
+                html += `
+                <details class="group border-b border-slate-50 last:border-0 py-2">
+                    <summary class="flex justify-between items-center font-bold cursor-pointer list-none text-[10px] lg:text-sm text-slate-700 outline-none pr-2">
+                        <span class="leading-snug pr-3">${item.q}</span>
+                        <span class="transition group-open:rotate-180 text-emerald-500 font-black shrink-0">▾</span>
+                    </summary>
+                    <div class="text-slate-500 text-[9px] lg:text-xs pt-2 animate-in fade-in leading-relaxed pr-4">
+                        <p>${item.a.replace(/\n/g, '<br>')}</p>
+                        ${item.img ? `<img src="${item.img}" class="mt-2 rounded-xl max-h-32 w-full object-cover border shadow-sm">` : ''}
+                    </div>
+                </details>`;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        function buildPolicyButtonsHtml(productId, policyId) {
+            if(!policyId) return "";
+            return `
+            <div class="grid grid-cols-2 gap-1.5 mt-1.5 pt-1.5 border-t border-slate-100">
+                <button onclick="window.openClientPolicy('shipping', '${productId}')" class="flex items-center justify-center gap-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-lg py-2 px-1 text-[7px] lg:text-[8px] font-black uppercase shadow-sm hover:bg-white hover:border-emerald-200 hover:text-emerald-600 transition group">
+                    <svg class="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8h-4.586a1 1 0 01-.707-.293l-2.828-2.828A1 1 0 0011.172 7H10v11a2 2 0 002 2z"/></svg> Envíos Bolivia
+                </button>
+                <button onclick="window.openClientPolicy('payment', '${productId}')" class="flex items-center justify-center gap-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-lg py-2 px-1 text-[7px] lg:text-[8px] font-black uppercase shadow-sm hover:bg-white hover:border-emerald-200 hover:text-emerald-600 transition group">
+                    <svg class="w-3.5 h-3.5 text-emerald-500 group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Formas de Pago
+                </button>
+            </div>`;
+        }
+
+        window.renderHome = () => {
+            const grid = document.getElementById('category-grid');
+            if(!grid) return;
+            grid.innerHTML = categories.map(cat => {
+                const p = products.find(x => x.category === cat.name);
+                const imgs = p ? getImgArray(p.image) : [];
+                const img = imgs.length > 0 ? imgs[0] : "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400";
+                return `
+                <div class="group relative bg-white rounded-[1.5rem] lg:rounded-[3.5rem] p-4 lg:p-10 h-[150px] sm:h-[250px] lg:h-[350px] flex flex-col justify-end overflow-hidden border shadow-sm lg:shadow-xl product-card cursor-pointer" onclick="window.goToCategory('${cat.name}')">
+                    <img src="${img}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-1000">
+                    <div class="absolute inset-0 bg-gradient-to-t from-blue-900 via-transparent"></div>
+                    <button onclick="window.shareLink('category', '${cat.name}', event)" class="absolute top-2 right-2 lg:top-4 lg:right-4 z-20 bg-white/20 backdrop-blur-md p-1.5 lg:p-3 rounded-full text-white hover:bg-white hover:text-comfort transition shadow-sm opacity-80 hover:opacity-100">
+                        <svg class="w-3.5 h-3.5 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    </button>
+                    <div class="relative z-10 text-white italic text-left">
+                        <h3 class="text-base lg:text-3xl font-black uppercase tracking-tighter leading-none italic text-left">${cat.name}</h3>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        window.updateNav = () => {
+            const pc = document.getElementById('pc-nav'); 
+            const mob = document.getElementById('mobile-nav-dynamic');
+            if(!pc || !mob) return;
+            const lks = pages.map(p => `<button onclick="window.showSection('custom', '${p.slug}')" class="hover:text-comfort transition italic uppercase font-black tracking-tighter italic">${p.name}</button>`).join('');
+            pc.innerHTML = lks;
+            mob.innerHTML = `<ul class="space-y-4 lg:space-y-6 italic">${pages.map(p => `<li><button onclick="window.showSection('custom', '${p.slug}'); toggleDrawer()" class="font-bold text-slate-600 text-[11px] lg:text-sm">✨ ${p.name}</button></li>`).join('')}</ul>`;
+        };
+
+        window.renderAdminProducts = () => {
+            const kw = document.getElementById('admin-kw')?.value.toLowerCase() || "";
+            const cat = document.getElementById('admin-filter-cat')?.value || "";
+            const badge = document.getElementById('admin-filter-badge')?.value || "";
+            const list = document.getElementById('admin-products-list');
+            if(!list) return;
+
+            const filtered = products.filter(p => {
+                const matchKw = p.name.toLowerCase().includes(kw);
+                const matchCat = cat === "" || p.category === cat;
+                const matchBadge = badge === "" || p.highlight === badge;
+                return matchKw && matchCat && matchBadge;
+            });
+
+            list.innerHTML = filtered.map(p => {
+                const imgs = getImgArray(p.image);
+                const priceDisplay = p.comparePrice && p.comparePrice > p.price ? `<span class="line-through text-slate-400 mr-1">${p.comparePrice}</span>${p.price}` : p.price;
+                return `<tr class="border-b hover:bg-slate-50 transition italic"><td class="px-4 py-3 flex items-center gap-3 text-left"><img src="${imgs[0] || ''}" class="w-10 h-10 lg:w-12 lg:h-12 rounded-lg object-cover shadow-sm"><div><span class="font-black text-[9px] lg:text-[10px] uppercase italic line-clamp-1">${p.name}</span><span class="block text-[7px] lg:text-[8px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Bs. ${priceDisplay} | Tallas: ${p.variants || 'N/A'}</span></div></td><td class="px-4 py-3 text-right space-x-2 whitespace-nowrap"><button onclick="window.openProductQuickView('${p.id}')" class="text-blue-900 font-black text-[10px] lg:text-xs">👁️</button><button onclick="window.openEditModal('prod', '${p.id}')" class="text-blue-500 font-black text-[8px] lg:text-[9px] uppercase">Editar</button><button onclick="window.deleteData('products', '${p.id}')" class="text-red-400 font-black text-[8px] lg:text-[9px] uppercase">Borrar</button></td></tr>`;
+            }).join('');
+        };
+
+        window.renderAttrManager = () => {
+            const catList = document.getElementById('list-categories');
+            const badList = document.getElementById('list-badges');
+            
+            if(catList) {
+                catList.innerHTML = categories.map(c => {
+                    const tempAsig = templates.find(t => t.id === c.templateId);
+                    const faqAsig = faqs.find(f => f.id === c.faqId);
+                    return `<div class="flex flex-col p-3 bg-slate-50 rounded-xl italic mb-1.5 border shadow-sm"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full shadow-sm" style="background:${c.color}"></div><span class="font-bold uppercase text-[9px] italic">${c.name}</span></div><div class="flex gap-3"><button onclick="window.loadAttrToEdit('categories', '${c.id}')" class="text-blue-500 font-black text-[8px] uppercase">Editar</button><button onclick="window.deleteData('categories', '${c.id}')" class="text-red-400 font-black text-[8px] uppercase">✕</button></div></div><div class="mt-1.5 flex gap-3 text-[7px] text-slate-400 font-bold uppercase tracking-widest">${tempAsig ? `<span>📦 ${tempAsig.name}</span>` : ''}${faqAsig ? `<span class="text-emerald-500">💬 ${faqAsig.name}</span>` : ''}</div></div>`;
+                }).join('');
+            }
+            if(badList) {
+                badList.innerHTML = badges.map(b => `<div class="flex justify-between p-3 bg-slate-50 rounded-xl items-center italic mb-1.5"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full shadow-sm" style="background:${b.color || '#1e3a8a'}"></div><span class="font-bold uppercase text-[9px] italic">${b.name}</span></div><div class="flex gap-3"><button onclick="window.loadAttrToEdit('badges', '${b.id}')" class="text-blue-500 font-black text-[8px] uppercase">Editar</button><button onclick="window.deleteData('badges', '${b.id}')" class="text-red-400 font-black text-[8px] uppercase">✕</button></div></div>`).join('');
+            }
+        };
+
+        window.updateSelectors = () => { 
+            const cats = document.querySelectorAll('.admin-cat-select');
+            const bads = document.querySelectorAll('.admin-badge-select');
+            const temps = document.querySelectorAll('.admin-template-select');
+            const faqSels = document.querySelectorAll('.admin-faq-select');
+            const polSels = document.querySelectorAll('.admin-policy-select');
+
+            cats.forEach(s => s.innerHTML = `<option value="">Categoría</option>` + categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('')); 
+            bads.forEach(s => s.innerHTML = `<option value="">Etiqueta</option>` + badges.map(b => `<option value="${b.name}">${b.name}</option>`).join('')); 
+            temps.forEach(s => s.innerHTML = `<option value="">Sin Logística Genérica</option>` + templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')); 
+            faqSels.forEach(s => {
+                const isOptional = s.id === 'f-faq';
+                s.innerHTML = `<option value="">${isOptional ? 'FAQ (Opcional)' : 'Sin FAQ'}</option>` + faqs.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            });
+            polSels.forEach(s => s.innerHTML = `<option value="">Sin Plantilla Envíos</option>` + policies.map(p => `<option value="${p.id}">${p.name}</option>`).join(''));
+        };
+
+        window.renderCatalogFilters = () => {
+            const bar = document.getElementById('filter-bar');
+            if(!bar) return;
+            const list = ['Todos', ...categories.map(c => c.name)];
+            bar.innerHTML = list.map(c => `<button onclick="window.filterCatalogUI('${c}')" class="px-4 py-1.5 lg:px-5 lg:py-2 rounded-full text-[8px] lg:text-[9px] font-black uppercase tracking-widest transition-all ${currentCatFilter === c ? 'bg-comfort text-white shadow-md' : 'bg-white text-slate-500 border hover:bg-slate-50'}">${c}</button>`).join('');
+        };
+
+        window.renderAdminTemplates = () => {
+            const list = document.getElementById('admin-templates-list');
+            if(!list) return;
+            list.innerHTML = templates.map(t => {
+                const blocks = t.blocks ? JSON.parse(t.blocks) : [];
+                return `<div class="bg-white p-4 lg:p-5 rounded-2xl border shadow-sm flex flex-col justify-between h-full"><div class="mb-3"><h4 class="font-black text-xs uppercase italic text-comfort mb-2">${t.name}</h4><div class="space-y-0.5">${blocks.map(b => `<p class="text-[8px] uppercase text-slate-500"><b>${b.key}:</b> ${b.value}</p>`).join('')}</div></div><div class="flex gap-3 border-t pt-3 mt-auto"><button onclick="window.openTemplateModal('${t.id}')" class="text-blue-500 font-black uppercase text-[8px]">Editar</button><button onclick="window.deleteData('templates', '${t.id}')" class="text-red-400 font-black uppercase text-[8px]">Eliminar</button></div></div>`;
+            }).join('');
+        };
+
+        window.renderAdminPolicies = () => {
+            const list = document.getElementById('admin-policies-list');
+            if(!list) return;
+            list.innerHTML = policies.map(p => {
+                return `<div class="bg-white p-4 lg:p-5 rounded-2xl border shadow-sm flex flex-col justify-between h-full"><div class="mb-3"><h4 class="font-black text-xs uppercase italic text-indigo-600 mb-2">${p.name}</h4><div class="flex gap-3"><span class="text-[8px] uppercase font-bold text-slate-400 flex items-center gap-1"><svg class="w-2.5 h-2.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8h-4.586a1 1 0 01-.707-.293l-2.828-2.828A1 1 0 0011.172 7H10v11a2 2 0 002 2z"/></svg> ${p.shippingText ? 'Sí' : 'No'}</span><span class="text-[8px] uppercase font-bold text-slate-400 flex items-center gap-1"><svg class="w-2.5 h-2.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> ${p.paymentText ? 'Sí' : 'No'}</span></div></div><div class="flex gap-3 border-t border-indigo-50 pt-3 mt-auto"><button onclick="window.openAdminPolicyModal('${p.id}')" class="text-blue-500 font-black uppercase text-[8px]">Editar</button><button onclick="window.deleteData('policies', '${p.id}')" class="text-red-400 font-black uppercase text-[8px]">Eliminar</button></div></div>`;
+            }).join('');
+        };
+
+        window.renderAdminFaqs = () => {
+            const list = document.getElementById('admin-faqs-list');
+            if(!list) return;
+            list.innerHTML = faqs.map(f => {
+                const qs = f.questions ? JSON.parse(f.questions) : [];
+                return `<div class="bg-white p-4 lg:p-5 rounded-2xl border shadow-sm flex flex-col justify-between h-full"><div class="mb-3"><h4 class="font-black text-xs uppercase italic text-emerald-600 mb-2">${f.name}</h4><p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">${qs.length} Preguntas</p></div><div class="flex gap-3 border-t border-emerald-50 pt-3 mt-auto"><button onclick="window.openFaqModal('${f.id}')" class="text-blue-500 font-black uppercase text-[8px]">Editar</button><button onclick="window.deleteData('faqs', '${f.id}')" class="text-red-400 font-black uppercase text-[8px]">Eliminar</button></div></div>`;
+            }).join('');
+        };
+
+        window.renderAdminPages = () => {
+            const list = document.getElementById('admin-pages-list');
+            if(!list) return;
+            list.innerHTML = pages.map(p => `
+                <div class="bg-white p-4 lg:p-5 rounded-xl border shadow-sm flex justify-between items-center italic">
+                    <div>
+                        <h4 class="font-black text-xs uppercase text-comfort mb-0.5">${p.name}</h4>
+                        <p class="text-[9px] text-slate-400 font-bold tracking-widest">/${p.slug}</p>
+                    </div>
+                    <div class="flex gap-3 items-center">
+                        ${p.faqId ? '<span class="text-[8px] text-emerald-500 uppercase font-black mr-2 border border-emerald-100 px-1.5 py-0.5 rounded">FAQ</span>' : ''}
+                        <button onclick="window.openEditModal('page', '${p.id}')" class="text-blue-500 font-black uppercase text-[8px]">Editar</button>
+                        <button onclick="window.deleteData('pages', '${p.id}')" class="text-red-400 font-black uppercase text-[8px]">Borrar</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // --- MANEJO DE MODALES ---
+        
+        window.openTemplateModal = (id = null) => {
+            document.getElementById('template-form').reset();
+            document.getElementById('template-blocks-container').innerHTML = '';
+            document.getElementById('temp-id').value = id || "";
+            if(id) {
+                const t = templates.find(x => x.id === id);
+                document.getElementById('temp-name').value = t.name;
+                const blocks = t.blocks ? JSON.parse(t.blocks) : [];
+                blocks.forEach(b => window.addTemplateBlock(b.key, b.value));
+            } else {
+                window.addTemplateBlock("Envíos", ""); window.addTemplateBlock("Garantía", "");
+            }
+            document.getElementById('template-modal').classList.remove('hidden');
+        };
+        window.closeTemplateModal = () => document.getElementById('template-modal').classList.add('hidden');
+
+        window.openAdminPolicyModal = (id = null) => {
+            document.getElementById('policy-form').reset();
+            document.getElementById('pol-id').value = id || "";
+            if(id) {
+                const p = policies.find(x => x.id === id);
+                document.getElementById('pol-name').value = p.name;
+                document.getElementById('pol-ship-txt').value = p.shippingText || "";
+                document.getElementById('pol-ship-img').value = p.shippingImg || "";
+                document.getElementById('pol-pay-txt').value = p.paymentText || "";
+                document.getElementById('pol-pay-img').value = p.paymentImg || "";
+            }
+            document.getElementById('admin-policy-modal').classList.remove('hidden');
+        };
+        window.closeAdminPolicyModal = () => document.getElementById('admin-policy-modal').classList.add('hidden');
+
+        window.openFaqModal = (id = null) => {
+            document.getElementById('faq-form').reset();
+            document.getElementById('faq-blocks-container').innerHTML = '';
+            document.getElementById('faq-id').value = id || "";
+            if(id) {
+                const f = faqs.find(x => x.id === id);
+                document.getElementById('faq-name').value = f.name;
+                const qs = f.questions ? JSON.parse(f.questions) : [];
+                qs.forEach(b => window.addFaqBlock(b.q, b.a, b.img || ''));
+            } else {
+                window.addFaqBlock("¿Tienen envíos?", "Sí, a todo Bolivia.");
+            }
+            document.getElementById('faq-modal').classList.remove('hidden');
+        };
+        window.closeFaqModal = () => document.getElementById('faq-modal').classList.add('hidden');
+
+        window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.add('hidden');
+
+        window.openEditModal = (type, id = null) => {
+            const container = document.getElementById('edit-form-container');
+            const modal = document.getElementById('edit-modal'); 
+            container.innerHTML = ""; 
+            modal.classList.remove('hidden');
+            
+            if(type === 'prod') {
+                const p = id ? products.find(x => x.id === id) : {name:"", price:"", comparePrice:"", category:"", highlight:"", desc:"", variants:"", image:"", landingHtml:"", infoBlocks:"[]", faqId:"", policyId:"", sizeGuide:"{}"};
+                const imgs = getImgArray(p.image);
+                let sg = {text: "", img: ""};
+                try { sg = p.sizeGuide ? JSON.parse(p.sizeGuide) : {text: "", img: ""}; } catch(e){}
+
+                document.getElementById('edit-modal-title').innerText = id ? "Editar Prod." : "Nuevo Prod.";
+                
+                container.innerHTML = `
+                <form id="form-master" class="flex flex-col gap-4 italic text-left">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b pb-1 mb-2 flex justify-between items-center">Básico<button type="button" onclick="window.generateProductInfoWithAI()" class="text-blue-600 normal-case flex items-center gap-1 bg-blue-100 px-2 py-1 rounded-md text-[9px] shadow-sm">✨ Auto</button></h4>
+                            <input type="text" id="f-name" required value="${p.name}" placeholder="Nombre" class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-bold text-xs italic">
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="number" id="f-price" required value="${p.price}" placeholder="Venta(Bs)" class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-black text-sm italic text-comfort">
+                                <input type="number" id="f-compare-price" value="${p.comparePrice || ''}" placeholder="Normal" class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-bold text-slate-400 text-xs italic">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="f-cat" required class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-bold text-[10px] admin-cat-select italic"></select>
+                                <select id="f-badge" class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-bold text-[10px] admin-badge-select italic"></select>
+                            </div>
+                            <input type="text" id="f-vars" value="${p.variants}" placeholder="Tallas" class="w-full p-2.5 bg-slate-50 rounded-lg border outline-none font-bold text-[10px] italic">
+                            <textarea id="f-desc" class="w-full p-2.5 bg-slate-50 rounded-lg border h-16 outline-none text-[10px] italic" placeholder="Resumen...">${p.desc}</textarea>
+                            
+                            <div class="grid grid-cols-1 gap-2 pt-1">
+                                <select id="f-faq" class="w-full p-2.5 bg-emerald-50 rounded-lg border border-emerald-100 outline-none font-bold text-[9px] admin-faq-select italic"></select>
+                                <select id="f-policy" class="w-full p-2.5 bg-indigo-50 rounded-lg border border-indigo-100 outline-none font-bold text-[9px] admin-policy-select italic"></select>
+                            </div>
+
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b pb-1 mb-2 mt-4">Guía de Tallas</h4>
+                            <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 space-y-2">
+                                <textarea id="f-sg-text" class="w-full p-2 bg-white rounded-lg border outline-none text-[9px] italic h-12" placeholder="Dimensiones...">${sg.text || ''}</textarea>
+                                <div class="flex gap-1.5 items-center">
+                                    <input type="text" id="f-sg-img-url" value="${sg.img || ''}" placeholder="URL Img..." class="flex-grow p-2 bg-white border rounded-md text-[9px] italic outline-none">
+                                    <label class="bg-white text-emerald-600 border border-emerald-200 px-2.5 py-1.5 rounded-md text-[8px] font-black uppercase cursor-pointer shadow-sm shrink-0">📷<input type="file" class="hidden" accept="image/*" onchange="window.handleSizeGuideImage(this)"></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-3 flex flex-col h-full">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b pb-1 mb-2">Media & Extras</h4>
+                            <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                                <div class="flex justify-between items-center mb-2"><label class="text-[9px] font-black uppercase text-blue-600">Galería</label><div class="flex gap-1.5"><label class="bg-white text-blue-500 border border-blue-200 px-2 py-1 rounded-md text-[8px] font-black uppercase cursor-pointer shadow-sm">📷<input type="file" class="hidden" accept="image/*" onchange="window.handleMultiImageFile(this)"></label><button type="button" onclick="window.addImgUI()" class="bg-blue-600 text-white px-2 py-1 rounded-md text-[8px] font-black uppercase shadow-sm">+ URL</button></div></div>
+                                <div id="modal-images-container" class="space-y-1.5 max-h-24 overflow-y-auto no-scrollbar"></div>
+                                <div class="flex flex-wrap gap-1.5 pt-1.5" id="img-previews"></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5"><label class="text-[9px] font-black uppercase text-slate-500">Ficha Técnica</label><button type="button" onclick="window.addBlockUI()" class="bg-slate-200 text-slate-600 px-2 py-1 rounded-md text-[8px] font-black uppercase">+ Bloque</button></div>
+                                <div id="modal-blocks-container" class="space-y-1.5 max-h-24 overflow-y-auto no-scrollbar"></div>
+                            </div>
+                            <div class="mt-auto pt-2">
+                                <label class="text-[9px] font-black uppercase text-slate-500 flex justify-between items-center mb-1.5"><span>HTML Ficha</span><button type="button" onclick="window.generateLandingWithAI()" class="text-purple-600 normal-case flex items-center gap-1 bg-purple-100 px-2 py-1 rounded-md text-[8px] shadow-sm">✨ HTML</button></label>
+                                <textarea id="f-landing" class="w-full p-2 bg-slate-900 text-green-400 font-mono text-[8px] rounded-lg h-16 outline-none">${p.landingHtml || ""}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 mt-2">
+                        <button type="submit" class="w-full py-3 bg-comfort text-white rounded-xl font-black uppercase tracking-widest shadow-xl text-[10px]">Guardar</button>
+                    </div>
+                </form>`;
+                
+                window.updateSelectors(); 
+                if(p.category) document.getElementById('f-cat').value = p.category;
+                if(p.highlight) document.getElementById('f-badge').value = p.highlight;
+                if(p.faqId) document.getElementById('f-faq').value = p.faqId;
+                if(p.policyId) document.getElementById('f-policy').value = p.policyId;
+                imgs.forEach(url => window.addImgUI(url));
+                JSON.parse(p.infoBlocks || "[]").forEach(b => window.addBlockUI(b.key, b.value));
+                window.renderImgPreviews();
+
+                document.getElementById('form-master').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const comparePriceVal = document.getElementById('f-compare-price').value;
+                    const data = {
+                        name: document.getElementById('f-name').value, price: Number(document.getElementById('f-price').value),
+                        comparePrice: comparePriceVal ? Number(comparePriceVal) : null, category: document.getElementById('f-cat').value, highlight: document.getElementById('f-badge').value,
+                        faqId: document.getElementById('f-faq').value, policyId: document.getElementById('f-policy').value,
+                        variants: document.getElementById('f-vars').value, image: JSON.stringify(Array.from(document.querySelectorAll('.f-img-url')).map(i => i.value)),
+                        desc: document.getElementById('f-desc').value, landingHtml: document.getElementById('f-landing').value,
+                        infoBlocks: JSON.stringify(Array.from(document.querySelectorAll('.modal-blk')).map(div => ({key: div.querySelector('.bk').value, value: div.querySelector('.bv').value}))),
+                        sizeGuide: JSON.stringify({ text: document.getElementById('f-sg-text').value, img: document.getElementById('f-sg-img-url').value })
+                    };
+                    const dataSize = new Blob([JSON.stringify(data)]).size;
+                    if (dataSize >= 1000000) { window.showToast("❌ Error: Imágenes pesadas."); return; }
+                    id ? await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data) : await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), data);
+                    window.closeEditModal(); window.showToast("Guardado ✅");
+                };
+            } else if (type === 'page') {
+                const p = id ? pages.find(x => x.id === id) : {name:"", slug:"", html:"", faqId:""};
+                document.getElementById('edit-modal-title').innerText = id ? "Editar Pág." : "Nueva Pág.";
+                
+                container.innerHTML = `
+                <form id="form-master" class="flex flex-col gap-4 italic text-left">
+                    <div class="space-y-3">
+                        <input type="text" id="f-page-name" required value="${p.name}" placeholder="Nombre (Ej: Quiénes Somos)" class="w-full p-3 bg-slate-50 rounded-xl border outline-none font-bold text-[10px] italic">
+                        <input type="text" id="f-page-slug" required value="${p.slug}" placeholder="Slug (Ej: nosotros)" class="w-full p-3 bg-slate-50 rounded-xl border outline-none font-bold text-[10px] italic">
+                        <select id="f-page-faq" class="w-full p-3 bg-emerald-50 rounded-xl border border-emerald-100 outline-none font-bold text-[10px] admin-faq-select italic"></select>
+                        <textarea id="f-page-html" class="w-full p-3 bg-slate-900 text-green-400 font-mono text-[8px] rounded-xl h-48 outline-none" placeholder="HTML...">${p.html || ""}</textarea>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100">
+                        <button type="submit" class="w-full py-3 bg-comfort text-white rounded-xl font-black uppercase tracking-widest shadow-xl text-[10px]">Guardar</button>
+                    </div>
+                </form>`;
+
+                window.updateSelectors();
+                if(p.faqId) document.getElementById('f-page-faq').value = p.faqId;
+
+                document.getElementById('form-master').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const data = {
+                        name: document.getElementById('f-page-name').value,
+                        slug: document.getElementById('f-page-slug').value,
+                        faqId: document.getElementById('f-page-faq').value,
+                        html: document.getElementById('f-page-html').value
+                    };
+                    id ? await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pages', id), data) : await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'pages'), data);
+                    window.closeEditModal(); window.showToast("Guardada ✅");
+                };
+            }
+        };
+
+        window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
+
+        // QUICK VIEW MODAL (Ultra-Tighter Spacing)
+        window.openProductQuickView = (id) => {
+            const p = products.find(x => x.id === id); if(!p) return;
+            const bData = badges.find(b => b.name === p.highlight);
+            const imgs = getImgArray(p.image);
+            const content = document.getElementById('modal-content');
+            
+            let priceBlock = `<div class="text-3xl font-black text-comfort italic text-left leading-none">${p.price} <span class="text-[9px] uppercase text-slate-400 tracking-widest">Bs.</span></div>`;
+            if (p.comparePrice && p.comparePrice > p.price) {
+                const discount = Math.round((1 - (p.price / p.comparePrice)) * 100);
+                priceBlock = `<div class="flex items-end gap-2 text-left leading-none"><div class="text-3xl font-black text-comfort italic">${p.price} <span class="text-[9px] uppercase text-slate-400 tracking-widest">Bs.</span></div><div class="text-base text-slate-300 line-through font-bold italic mb-0.5">${p.comparePrice} Bs.</div><div class="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[8px] font-black uppercase tracking-widest mb-1">-${discount}%</div></div>`;
+            }
+
+            let sgValid = false;
+            try { const sg = JSON.parse(p.sizeGuide || "{}"); if(sg.text || sg.img) sgValid = true; } catch(e){}
+
+            content.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-8 items-start italic text-left"><div class="relative w-full aspect-square bg-slate-50 rounded-[1.5rem] lg:rounded-[3rem] overflow-hidden shadow-inner group"><div class="img-carousel h-full w-full" id="qv-carousel">${imgs.map(url => `<img src="${url}" class="w-full h-full object-cover">`).join('')}</div>${imgs.length > 1 ? `<div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">${imgs.map((_,i) => `<div class="w-1.5 h-1.5 rounded-full bg-white/50"></div>`).join('')}</div><div class="absolute inset-y-0 left-2 flex items-center opacity-0 group-hover:opacity-100 transition"><button onclick="document.getElementById('qv-carousel').scrollBy({left:-300, behavior:'smooth'})" class="bg-white/80 p-1.5 rounded-full shadow-md">‹</button></div><div class="absolute inset-y-0 right-2 flex items-center opacity-0 group-hover:opacity-100 transition"><button onclick="documentgetElementById('qv-carousel').scrollBy({left:300, behavior:'smooth'})" class="bg-white/80 p-1.5 rounded-full shadow-md">›</button></div>` : ''}${p.highlight ? `<div class="absolute top-3 left-3 text-white px-2 py-1 rounded-md text-[7px] font-black uppercase shadow-sm" style="background-color: ${bData?.color || '#1e3a8a'}">${p.highlight}</div>` : ''}</div><div class="space-y-2 lg:space-y-4 text-left flex flex-col h-full"><div class="space-y-0.5 lg:space-y-1"><h2 class="text-xl lg:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-tight italic">${p.name}</h2><p class="text-slate-400 font-bold uppercase text-[7px] lg:text-[9px] tracking-[0.2em] italic">${p.category}</p></div>
+            <p class="text-[10px] lg:text-sm text-slate-500 font-medium leading-snug line-clamp-2 italic">${p.desc}</p>
+            ${p.variants ? `<div class="flex flex-col gap-1 lg:gap-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[7px] font-black uppercase text-slate-300 tracking-widest italic text-left">Tallas</span>
+                    ${sgValid ? `
+                    <button onclick="window.openSizeGuide('${p.id}')" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-1 text-[7px] font-black uppercase bg-emerald-50 px-1.5 py-0.5 rounded-md transition shadow-sm">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Guía de Tallas
+                    </button>
+                    ` : ''}
+                </div>
+                <div class="flex flex-wrap gap-1 text-left">${p.variants.split(',').map(v => `<span class="px-2 py-0.5 bg-slate-100 rounded text-[8px] font-black uppercase text-slate-600 border border-slate-200 italic">${v.trim()}</span>`).join('')}</div>
+            </div>` : ''}
+            <div class="flex justify-between items-end border-t border-slate-50 pt-1 mt-auto">${priceBlock}<button onclick="window.shareLink('product', '${p.id}', event)" class="bg-slate-50 text-slate-500 p-2 rounded-lg hover:bg-slate-100 transition shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></button></div>
+            ${buildPolicyButtonsHtml(p.id, p.policyId)}
+            <div class="pt-1"><button onclick="window.openProductFullLanding('${p.id}')" class="w-full bg-comfort text-white py-2.5 rounded-xl font-black uppercase text-[8px] tracking-widest shadow-md hover:scale-[1.02] transition italic">Ver Ficha Completa</button></div></div></div>`;
+            
+            const modal = document.getElementById('product-modal-container');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('modal-show'), 10);
+        };
+
+        window.closeProductModal = () => {
+            const modal = document.getElementById('product-modal-container');
+            modal.classList.remove('modal-show');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.toggleDrawer = () => { 
+            const drawer = document.getElementById('mobile-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            if (drawer.classList.contains('drawer-open')) {
+                drawer.classList.remove('drawer-open');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            } else {
+                drawer.classList.add('drawer-open');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            }
+        };
+
+        window.filterCatalogUI = (cat = null) => {
+            if(cat) currentCatFilter = cat;
+            const search = document.getElementById('catalog-search')?.value.toLowerCase() || "";
+            const grid = document.getElementById('products-grid');
+            if(!grid) return;
+            const filtered = products.filter(p => (p.name.toLowerCase().includes(search) && (currentCatFilter === 'Todos' || p.category === currentCatFilter)));
+            grid.innerHTML = filtered.map(p => {
+                const cData = categories.find(c => c.name === p.category);
+                const bData = badges.find(b => b.name === p.highlight);
+                const imgs = getImgArray(p.image);
+                
+                const priceHTML = p.comparePrice && p.comparePrice > p.price 
+                    ? `<div class="flex flex-col"><span class="text-[8px] lg:text-[10px] text-slate-400 line-through font-bold mb-0.5">${p.comparePrice} Bs.</span><span class="text-sm lg:text-2xl font-black text-comfort leading-none">${p.price} Bs.</span></div>`
+                    : `<div class="text-sm lg:text-2xl font-black text-comfort">${p.price} Bs.</div>`;
+
+                return `
+                <div class="product-card bg-white rounded-2xl lg:rounded-[3rem] p-3 lg:p-6 border border-slate-100 shadow-sm flex flex-col h-full italic text-left">
+                    <div class="relative mb-3 lg:mb-5 overflow-hidden rounded-xl lg:rounded-[2rem] aspect-square bg-slate-50 flex items-center justify-center cursor-pointer shadow-inner" onclick="window.openProductQuickView('${p.id}')">
+                        <img src="${imgs[0] || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                        ${p.highlight ? `<span class="absolute top-1.5 left-1.5 lg:top-3 lg:left-3 text-white px-1.5 py-0.5 lg:px-2 lg:py-1 text-[6px] lg:text-[8px] font-black uppercase rounded-md shadow-sm" style="background-color: ${bData?.color || '#1e3a8a'}">${p.highlight}</span>` : ''}
+                    </div>
+                    <div class="mb-3 flex-grow">
+                        <div class="text-[6px] lg:text-[8px] font-black uppercase tracking-[0.3em] mb-1 line-clamp-1" style="color: ${cData?.color || '#1e3a8a'}">${p.category}</div>
+                        <h3 class="text-xs lg:text-lg font-black text-slate-900 uppercase leading-tight italic line-clamp-2">${p.name}</h3>
+                        <p class="hidden lg:block text-slate-400 text-[9px] lg:text-[11px] line-clamp-2 leading-relaxed italic mt-1.5">${p.desc}</p>
+                    </div>
+                    <div class="flex items-center justify-between mt-auto pt-2 border-t border-slate-50 italic">
+                        ${priceHTML}
+                        <div class="flex gap-1.5">
+                            <button onclick="window.shareLink('product', '${p.id}', event)" class="bg-slate-50 text-slate-400 p-1.5 lg:p-3 rounded-lg hover:bg-slate-100 hover:text-comfort transition">
+                                <svg class="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                            </button>
+                            <button onclick="window.openProductQuickView('${p.id}')" class="bg-blue-50 text-comfort p-1.5 lg:p-3 rounded-lg hover:scale-105 transition">
+                                <span class="text-xs lg:text-sm">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            window.renderCatalogFilters();
+        };
+
+        // RENDER DE FICHA DE PRODUCTO (Ultra-Tighter Spacing Mobile)
+        window.openProductFullLanding = (id) => {
+            const p = products.find(x => x.id === id); if(!p) return;
+            const catData = categories.find(c => c.name === p.category);
+            const template = templates.find(t => t.id === catData?.templateId); 
+            const bData = badges.find(b => b.name === p.highlight);
+            const imgs = getImgArray(p.image);
+            window.closeProductModal();
+            const renderer = document.getElementById('custom-renderer');
+            
+            let priceBlock = `<div class="text-3xl lg:text-5xl font-black text-comfort italic text-left leading-none">${p.price} <span class="text-[10px] lg:text-sm uppercase text-slate-400 tracking-widest">Bs.</span></div>`;
+            if (p.comparePrice && p.comparePrice > p.price) {
+                const discount = Math.round((1 - (p.price / p.comparePrice)) * 100);
+                priceBlock = `<div class="flex items-end gap-2 lg:gap-4 text-left leading-none"><div class="text-3xl lg:text-5xl font-black text-comfort italic">${p.price} <span class="text-[10px] lg:text-sm uppercase text-slate-400 tracking-widest">Bs.</span></div><div class="text-base lg:text-2xl text-slate-300 line-through font-bold italic mb-0.5 lg:mb-1">${p.comparePrice} Bs.</div><div class="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-1 lg:mb-2">-${discount}%</div></div>`;
+            }
+
+            let sgValid = false;
+            try { const sg = JSON.parse(p.sizeGuide || "{}"); if(sg.text || sg.img) sgValid = true; } catch(e){}
+
+            let html = `
+            <div class="flex justify-end mb-2">
+                 <button onclick="window.shareLink('product', '${p.id}', event)" class="bg-white text-slate-600 border border-slate-200 px-2 py-1 lg:px-3 lg:py-1.5 rounded-md lg:rounded-lg text-[8px] lg:text-[9px] font-black uppercase shadow-sm hover:bg-slate-50 transition flex items-center gap-1">🔗 Compartir</button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-10 mb-3 lg:mb-6 items-start italic text-left">
+                <div class="relative group lg:sticky lg:top-20">
+                    <div class="img-carousel w-full aspect-square rounded-[1.5rem] lg:rounded-[4rem] shadow-md lg:shadow-xl border-[4px] lg:border-[1rem] border-white overflow-hidden bg-slate-50" id="full-carousel">
+                        ${imgs.map(url => `<img src="${url}" class="w-full h-full object-cover">`).join('')}
+                    </div>
+                    ${imgs.length > 1 ? `<div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">${imgs.map((_,i) => `<div class="w-1.5 h-1.5 lg:w-2.5 lg:h-2.5 rounded-full bg-slate-900/40 backdrop-blur-sm"></div>`).join('')}</div><button onclick="document.getElementById('full-carousel').scrollBy({left:-500, behavior:'smooth'})" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md transition opacity-0 group-hover:opacity-100">‹</button><button onclick="document.getElementById('full-carousel').scrollBy({left:500, behavior:'smooth'})" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md transition opacity-0 group-hover:opacity-100">›</button>` : ''}
+                </div>
+                <div class="space-y-1.5 lg:space-y-5 py-0 flex flex-col h-full">
+                    <div class="flex flex-wrap items-center gap-1.5 lg:gap-3">
+                        ${p.highlight ? `<span class="px-2 py-0.5 text-white text-[7px] lg:text-[10px] font-black uppercase rounded-md shadow-sm tracking-widest" style="background-color: ${bData?.color || '#1e3a8a'}">${p.highlight}</span>` : ''}
+                        <span class="text-[8px] lg:text-xs font-bold uppercase tracking-[0.3em]" style="color: ${catData?.color || '#94a3b8'}">${p.category}</span>
+                    </div>
+                    
+                    <h1 class="text-xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 leading-tight italic">${p.name}</h1>
+                    <p class="text-[11px] lg:text-base text-slate-500 font-medium italic leading-snug">${p.desc}</p>
+                    
+                    ${p.variants ? `<div class="pt-1.5 lg:pt-4 border-t border-slate-50">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-[7px] lg:text-[9px] font-black uppercase text-slate-400 tracking-[0.4em] italic block">Tallas Disponibles</span>
+                            ${sgValid ? `
+                            <button onclick="window.openSizeGuide('${p.id}')" class="text-emerald-500 hover:text-emerald-600 flex items-center gap-1 text-[8px] lg:text-[9px] font-black uppercase bg-emerald-50 px-2 py-1 rounded-md transition shadow-sm border border-emerald-100">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                Guía de Tallas
+                            </button>
+                            ` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 lg:gap-2">${p.variants.split(',').map(v => `<span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-[9px] lg:text-xs font-black uppercase text-slate-700 shadow-sm italic text-center min-w-[30px]">${v.trim()}</span>`).join('')}</div>
+                    </div>` : ''}
+
+                    <div class="pt-1 lg:pt-2 border-t border-slate-50 mt-auto">${priceBlock}</div>
+                    ${buildPolicyButtonsHtml(p.id, p.policyId)}
+                </div>
+            </div>`;
+            
+            const blocks = p.infoBlocks ? JSON.parse(p.infoBlocks) : [];
+            if(blocks.length > 0) html += `<div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-1.5 lg:gap-3 mb-3 lg:mb-6 italic">${blocks.map(b => `<div class="px-2 py-1.5 lg:px-5 lg:py-4 bg-slate-50 rounded-lg lg:rounded-2xl border border-slate-100 flex justify-between items-center group hover:bg-white transition-all duration-300 italic gap-2"><span class="font-black text-slate-400 uppercase text-[7px] lg:text-[9px] tracking-widest italic shrink-0">${b.key}</span><span class="font-black text-slate-900 uppercase italic text-[9px] lg:text-sm tracking-tight text-right line-clamp-1">${b.value}</span></div>`).join('')}</div>`;
+            
+            const logistics = template && template.blocks ? JSON.parse(template.blocks) : [];
+            if(logistics.length > 0) {
+                html += `<div class="p-2 lg:p-4 bg-blue-50/60 rounded-xl lg:rounded-2xl border border-blue-100 grid grid-cols-2 gap-1.5 lg:gap-3 mb-3 lg:mb-6 italic text-left">${logistics.map(b => `<div class="bg-white p-2 lg:p-4 rounded-lg lg:rounded-xl shadow-sm border border-blue-50/50 flex flex-col justify-center"><p class="text-[7px] lg:text-[8px] font-black text-comfort uppercase mb-0.5 tracking-widest">${b.key}</p><p class="font-bold text-slate-700 text-[8px] lg:text-xs leading-tight">${b.value}</p></div>`).join('')}</div>`;
+            }
+
+            if(p.landingHtml) {
+                html += `<div class="border-t border-slate-50 pt-3 lg:pt-6 italic text-center"><p class="text-[8px] lg:text-[9px] font-black text-slate-300 uppercase mb-2 lg:mb-4 tracking-widest italic text-center">Análisis Clínico Avanzado</p><div class="safe-iframe-wrapper"><iframe id="safe-frame-container" src="data:text/html;base64,${btoa(unescape(encodeURIComponent(p.landingHtml)))}"></iframe></div></div>`;
+            }
+
+            const appliedFaq = p.faqId || catData?.faqId;
+            html += buildFaqHtml(appliedFaq);
+
+            renderer.innerHTML = html;
+            document.getElementById('custom-share-btn').style.display = 'none'; 
+            window.showSection('custom', ''); 
+        };
+
+        window.openSizeGuide = (id) => {
+            const p = products.find(x => x.id === id); if(!p || !p.sizeGuide) return;
+            let sg = {};
+            try { sg = JSON.parse(p.sizeGuide); } catch(e) { return; }
+            
+            const content = document.getElementById('size-guide-content-box');
+            content.innerHTML = `
+                <button onclick="closeSizeGuide()" class="absolute top-3 right-3 text-slate-300 hover:text-emerald-500 text-lg transition">✕</button>
+                <div class="w-8 h-8 lg:w-12 lg:h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-4 shadow-inner">
+                    <svg class="w-4 h-4 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </div>
+                <h3 class="text-sm lg:text-lg font-black text-slate-900 uppercase tracking-tighter mb-2 lg:mb-4">Guía de Tallas</h3>
+                ${sg.text ? `<div class="text-[9px] lg:text-[11px] text-slate-500 font-bold leading-relaxed mb-2 lg:mb-4 whitespace-pre-wrap text-left bg-slate-50 p-2 lg:p-4 rounded-xl border border-slate-100">${sg.text}</div>` : ''}
+                ${sg.img ? `<img src="${sg.img}" class="w-full rounded-lg shadow-sm border border-slate-100">` : ''}
+            `;
+            
+            const modal = document.getElementById('size-guide-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100', 'pointer-events-auto');
+                content.classList.remove('scale-90');
+            }, 10);
+        };
+
+        window.closeSizeGuide = () => {
+            const modal = document.getElementById('size-guide-modal');
+            const content = document.getElementById('size-guide-content-box');
+            modal.classList.remove('opacity-100', 'pointer-events-auto');
+            content.classList.add('scale-90');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.openClientPolicy = (type, productId) => {
+            const p = products.find(x => x.id === productId);
+            if(!p || !p.policyId) return;
+            const pol = policies.find(x => x.id === p.policyId);
+            if(!pol) return;
+
+            const content = document.getElementById('client-policy-content-box');
+            let title = type === 'shipping' ? 'Envíos Bolivia' : 'Formas de Pago';
+            let txt = type === 'shipping' ? pol.shippingText : pol.paymentText;
+            let img = type === 'shipping' ? pol.shippingImg : pol.paymentImg;
+            let icon = type === 'shipping'
+                ? `<svg class="w-4 h-4 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8h-4.586a1 1 0 01-.707-.293l-2.828-2.828A1 1 0 0011.172 7H10v11a2 2 0 002 2z"/></svg>`
+                : `<svg class="w-4 h-4 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>`;
+
+            content.innerHTML = `
+                <button onclick="window.closeClientPolicy()" class="absolute top-3 right-3 text-slate-300 hover:text-emerald-500 text-lg transition">✕</button>
+                <div class="w-8 h-8 lg:w-12 lg:h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-4 shadow-inner">
+                    ${icon}
+                </div>
+                <h3 class="text-sm lg:text-lg font-black text-slate-900 uppercase tracking-tighter mb-2 lg:mb-4">${title}</h3>
+                ${txt ? `<div class="text-[9px] lg:text-[11px] text-slate-500 font-bold leading-relaxed mb-2 lg:mb-4 whitespace-pre-wrap text-left bg-slate-50 p-2 lg:p-4 rounded-xl border border-slate-100">${txt}</div>` : ''}
+                ${img ? `<img src="${img}" class="w-full rounded-lg shadow-sm border border-slate-100 mt-1">` : ''}
+            `;
+
+            const modal = document.getElementById('client-policy-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100', 'pointer-events-auto');
+                content.classList.remove('scale-90');
+            }, 10);
+        };
+
+        window.closeClientPolicy = () => {
+            const modal = document.getElementById('client-policy-modal');
+            const content = document.getElementById('client-policy-content-box');
+            modal.classList.remove('opacity-100', 'pointer-events-auto');
+            content.classList.add('scale-90');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.handleSizeGuideImage = (input) => {
+            const file = input.files[0]; if (!file) return;
+            window.showToast("Optimizando guía..."); const reader = new FileReader();
+            reader.onload = async (e) => { 
+                const comp = await compressImage(e.target.result); 
+                document.getElementById('f-sg-img-url').value = comp; 
+                window.showToast("Lista ✅"); 
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handlePolicyImg = (input, targetId) => {
+            const file = input.files[0]; if (!file) return;
+            window.showToast("Optimizando...");
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const comp = await compressImage(e.target.result);
+                document.getElementById(targetId).value = comp;
+                window.showToast("Lista ✅");
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.addTemplateBlock = (k='', v='') => {
+            const cont = document.getElementById('template-blocks-container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center bg-white p-2 rounded-lg border italic mb-2 t-block";
+            div.innerHTML = `<input type="text" value="${k}" placeholder="Concepto" class="tb-k w-1/3 bg-transparent outline-none font-bold text-[10px] uppercase text-left"><input type="text" value="${v}" placeholder="Detalle..." class="tb-v w-1/2 bg-transparent outline-none font-black text-[10px] uppercase tracking-tighter text-left"><button type="button" onclick="this.parentElement.remove()" class="text-red-400 font-bold px-2 text-left">✕</button>`;
+            cont.appendChild(div);
+        };
+
+        window.addFaqBlock = (q='', a='', img='') => {
+            const cont = document.getElementById('faq-blocks-container');
+            const div = document.createElement('div');
+            div.className = "flex flex-col gap-2 bg-white p-3 rounded-xl border italic mb-3 f-block shadow-sm relative";
+            div.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <span class="text-emerald-500 font-black text-lg">Q</span>
+                    <input type="text" value="${q}" placeholder="¿Pregunta?" class="fb-q w-full bg-slate-50 outline-none font-bold text-xs p-2 rounded border">
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 font-bold p-1 absolute -top-2 -right-2 bg-white border rounded-full w-5 h-5 flex items-center justify-center shadow-md">✕</button>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-300 font-black text-lg pt-1">A</span>
+                    <textarea placeholder="Respuesta..." class="fb-a w-full bg-slate-50 border rounded p-2 outline-none font-medium text-[10px] h-12 resize-none leading-relaxed">${a}</textarea>
+                </div>
+                <div class="pl-6">
+                    <input type="text" value="${img}" placeholder="URL Img (Op)" class="fb-img w-full bg-slate-50 border rounded p-2 outline-none text-[9px] text-slate-500">
+                </div>
+            `;
+            cont.appendChild(div);
+        };
+
+        document.getElementById('template-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('temp-id').value;
+            const blocks = Array.from(document.querySelectorAll('.t-block')).map(div => ({ key: div.querySelector('.tb-k').value, value: div.querySelector('.tb-v').value }));
+            const data = { name: document.getElementById('temp-name').value, blocks: JSON.stringify(blocks) };
+            if(id) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'templates', id), data);
+            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'templates'), data);
+            window.closeTemplateModal(); window.showToast("Guardado ✅");
+        };
+
+        document.getElementById('policy-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('pol-id').value;
+            const data = {
+                name: document.getElementById('pol-name').value,
+                shippingText: document.getElementById('pol-ship-txt').value,
+                shippingImg: document.getElementById('pol-ship-img').value,
+                paymentText: document.getElementById('pol-pay-txt').value,
+                paymentImg: document.getElementById('pol-pay-img').value
+            };
+            if(id) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'policies', id), data);
+            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'policies'), data);
+            window.closeAdminPolicyModal(); window.showToast("Guardado ✅");
+        };
+
+        document.getElementById('faq-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('faq-id').value;
+            const qs = Array.from(document.querySelectorAll('.f-block')).map(div => ({ 
+                q: div.querySelector('.fb-q').value.trim(), 
+                a: div.querySelector('.fb-a').value.trim(),
+                img: div.querySelector('.fb-img').value.trim()
+            })).filter(item => item.q !== ""); 
+            
+            const data = { name: document.getElementById('faq-name').value, questions: JSON.stringify(qs) };
+            if(id) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'faqs', id), data);
+            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'faqs'), data);
+            window.closeFaqModal(); window.showToast("Guardado ✅");
+        };
+
+        window.isSeeding = false;
+        window.seedDatabase = async () => {
+            if(window.isSeeding) return;
+            window.isSeeding = true;
+            window.showToast("Cargando Catálogo...");
+            
+            try {
+                const tRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'templates'), {
+                    name: "Logística Ejemplo", blocks: JSON.stringify([{key: "Envíos", value: "Todo el país en 48h hábiles"}, {key: "Garantía", value: "30 días por defecto de fábrica"}])
+                });
+                
+                const polRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'policies'), {
+                    name: "Estándar Nacional",
+                    shippingText: "Envíos a todo el país. Tiempo estimado 24 a 48 horas hábiles.\nCosto corre por cuenta del cliente.",
+                    shippingImg: "",
+                    paymentText: "Aceptamos transferencias y QR.\nEnvía tu comprobante una vez realizado el pago.",
+                    paymentImg: ""
+                });
+
+                const initialCats = [{name: "Taloneras", color: "#1e3a8a", templateId: tRef.id}, {name: "Plantillas", color: "#2563eb", templateId: tRef.id}, {name: "Separadores", color: "#059669", templateId: tRef.id}, {name: "Compresión", color: "#7c3aed", templateId: tRef.id}, {name: "Protectores", color: "#db2777", templateId: tRef.id}, {name: "Accesorios", color: "#d97706", templateId: tRef.id}, {name: "Calzado", color: "#4b5563", templateId: tRef.id}, {name: "Masajeadores", color: "#4f46e5", templateId: tRef.id}, {name: "Infantil", color: "#0891b2", templateId: tRef.id}, {name: "Estabilizadores", color: "#b91c1c", templateId: tRef.id}, {name: "Cuidado Piel", color: "#15803d", templateId: tRef.id}, {name: "Insumos", color: "#374151", templateId: tRef.id}];
+                const badNames = [{name: "Nuevo", color: "#10b981"}, {name: "Top Ventas", color: "#1e3a8a"}, {name: "Oferta", color: "#ef4444"}, {name: "Premium", color: "#8b5cf6"}, {name: "Bio", color: "#14b8a6"}, {name: "Pro", color: "#f59e0b"}];
+
+                for (const cat of initialCats) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'categories'), cat);
+                for (const badge of badNames) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'badges'), badge);
+
+                const samples = Array.from({length: 30}, (_, i) => {
+                    const price = 150 + (i * 10);
+                    return {
+                        name: `Prod Comfort Life ${i+1}`, price: price, comparePrice: i % 3 === 0 ? price + 50 : null,
+                        category: initialCats[i % initialCats.length].name, highlight: badNames[i % badNames.length].name, variants: "S, M, L",
+                        desc: "Solución ortopédica avanzada importada.", image: JSON.stringify([`https://images.unsplash.com/photo-${1560769629 + i}-975ec94e6a86?w=600`, `https://images.unsplash.com/photo-${1560769635 + i}-975ec94e6a86?w=600`]),
+                        infoBlocks: JSON.stringify([{key: "Material", value: "Silicona Médica"}, {key: "Origen", value: "Importado"}]),
+                        policyId: polRef.id
+                    };
+                });
+                for (const sample of samples) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), sample);
+                window.showToast("Carga Completa ✅");
+            } catch(e) { window.showToast("Error de servidor ❌"); } finally { window.isSeeding = false; }
+        };
+
+        window.openAuthModal = () => document.getElementById('auth-modal').classList.remove('hidden');
+        window.closeAuthModal = () => document.getElementById('auth-modal').classList.add('hidden');
+        window.goToCategory = (cat) => { window.showSection('catalog'); window.filterCatalogUI(cat); };
+        
+        window.showSection = (s, slug = '') => {
+            document.querySelectorAll('section, #view-admin').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`section-${s}`) || document.getElementById('view-admin');
+            if(target) target.classList.remove('hidden');
+            if(s === 'custom' && slug !== '') {
+                const p = pages.find(x => x.slug === slug);
+                let content = p ? p.html : "Contenido no disponible.";
+                if (p && p.faqId) content += buildFaqHtml(p.faqId); 
+                document.getElementById('custom-renderer').innerHTML = content;
+                const shareBtn = document.getElementById('custom-share-btn');
+                if(shareBtn) shareBtn.onclick = (e) => window.shareLink('page', slug, e);
+            }
+            window.scrollTo({top:0, behavior: 'smooth'});
+        };
+
+        window.addImgUI = (val = "") => {
+            const cont = document.getElementById('modal-images-container'); if(!cont) return;
+            const div = document.createElement('div'); div.className = "img-entry flex gap-1 mb-1 items-center";
+            div.innerHTML = `<input type="text" value="${val}" oninput="window.renderImgPreviews()" placeholder="https://..." class="f-img-url flex-grow p-1.5 bg-white border rounded text-[8px] italic outline-none"><button type="button" onclick="this.parentElement.remove(); window.renderImgPreviews()" class="text-red-400 p-1 font-bold text-xs">✕</button>`;
+            cont.appendChild(div);
+        };
+        window.renderImgPreviews = () => {
+            const previews = document.getElementById('img-previews'); if(!previews) return;
+            const urls = Array.from(document.querySelectorAll('.f-img-url')).map(i => i.value).filter(v => v !== "");
+            previews.innerHTML = urls.map(url => `<div class="relative w-8 h-8 rounded overflow-hidden border shadow-sm shrink-0"><img src="${url}" class="w-full h-full object-cover"></div>`).join('');
+        };
+        window.handleMultiImageFile = (input) => {
+            const file = input.files[0]; if (!file) return;
+            window.showToast("Optimizando..."); const reader = new FileReader();
+            reader.onload = async (e) => { const comp = await compressImage(e.target.result); window.addImgUI(comp); window.renderImgPreviews(); window.showToast("Lista ✅"); };
+            reader.readAsDataURL(file);
+        };
+        window.addBlockUI = (k = "", v = "") => {
+            const cont = document.getElementById('modal-blocks-container'); if(!cont) return;
+            const div = document.createElement('div'); div.className = "modal-blk flex gap-1 items-center bg-white p-1.5 rounded border italic mb-1 text-left";
+            div.innerHTML = `<input type="text" value="${k}" placeholder="Dato" class="bk w-1/3 bg-transparent outline-none font-bold text-[8px] uppercase"><input type="text" value="${v}" placeholder="Valor" class="bv w-1/2 bg-transparent outline-none font-black text-[9px] uppercase tracking-tighter"><button type="button" onclick="this.parentElement.remove()" class="text-red-400 font-bold px-1">✕</button>`;
+            cont.appendChild(div);
+        };
+
+        window.addAttribute = async (type) => {
+            const idField = type === 'categories' ? 'edit-cat-id' : 'edit-badge-id';
+            const name = document.getElementById(type === 'categories' ? 'new-cat-name' : 'new-badge-name').value.trim();
+            const color = document.getElementById(type === 'categories' ? 'new-cat-color' : 'new-badge-color').value;
+            const idVal = document.getElementById(idField).value;
+            if(!name) return;
+            const data = { name, color };
+            if(type === 'categories') {
+                data.templateId = document.getElementById('new-cat-template').value;
+                data.faqId = document.getElementById('new-cat-faq').value; 
+            }
+            idVal ? await setDoc(doc(db, 'artifacts', appId, 'public', 'data', type, idVal), data) : await addDoc(collection(db, 'artifacts', appId, 'public', 'data', type), data);
+            document.getElementById(type === 'categories' ? 'new-cat-name' : 'new-badge-name').value = "";
+            if(type === 'categories') {
+                document.getElementById('new-cat-template').value = "";
+                document.getElementById('new-cat-faq').value = "";
+            }
+            document.getElementById(idField).value = ""; window.showToast("Guardado ✅");
+        };
+
+        window.loadAttrToEdit = (type, id) => {
+            const item = (type === 'categories' ? categories : badges).find(x => x.id === id); if(!item) return;
+            document.getElementById(type === 'categories' ? 'edit-cat-id' : 'edit-badge-id').value = item.id;
+            document.getElementById(type === 'categories' ? 'new-cat-name' : 'new-badge-name').value = item.name;
+            document.getElementById(type === 'categories' ? 'new-cat-color' : 'new-badge-color').value = item.color || "#1e3a8a";
+            if(type === 'categories') {
+                document.getElementById('new-cat-template').value = item.templateId || "";
+                document.getElementById('new-cat-faq').value = item.faqId || "";
+            }
+            window.showToast("Editando ✅");
+        };
+
+        window.handleLogin = () => { if(document.getElementById('auth-pass').value === "admin1987") { window.showSection('admin'); document.getElementById('auth-modal').classList.add('hidden'); window.showToast("Bienvenido ✅"); } else { window.showToast("Clave Incorrecta ❌"); } };
+        window.logout = () => location.reload();
+        window.setAdminTab = (t) => { document.querySelectorAll('.admin-pane').forEach(v => v.classList.add('hidden')); document.getElementById(`admin-${t}`).classList.remove('hidden'); document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.remove('admin-tab-active')); document.getElementById(`tab-${t}`).classList.add('admin-tab-active'); window.renderAttrManager(); };
+        window.showToast = (m) => { const t = document.getElementById('toast'); if(t){ t.innerText = m; t.classList.remove('translate-y-28'); setTimeout(() => t.classList.add('translate-y-28'), 3000); }};
+        window.saveAIConfig = async () => { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'aiConfig'), { prompt: document.getElementById('ai-prompt-config').value }); window.showToast("IA Lista ✅"); };
+
+        window.deleteData = (col, id) => {
+            const modal = document.getElementById('confirm-modal');
+            const btnConfirm = document.getElementById('confirm-btn-action');
+            modal.classList.remove('hidden');
+            btnConfirm.onclick = async () => {
+                window.closeConfirmModal();
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id)); window.showToast("Borrado ✅"); } 
+                catch(e) { window.showToast("Error al borrar ❌"); }
+            };
+        };
+
+        window.generateProductInfoWithAI = async () => {
+            const name = document.getElementById('f-name').value.trim(); const cat = document.getElementById('f-cat').value;
+            if (!name) return window.showToast("⚠️ Nombre primero");
+            window.showToast("✨ IA...");
+            try {
+                const prompt = `Experto ortopedia médica. Producto "${name}" categoría "${cat}". Devuelve JSON exacto: {"desc": "Desc persuasiva max 2 líneas.", "variants": "Ej S, M", "blocks": [{"key": "Material", "value": "Silicona"}]}`;
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }) });
+                const d = await res.json(); const data = JSON.parse(d.candidates[0].content.parts[0].text);
+                if(data.desc) document.getElementById('f-desc').value = data.desc;
+                if(data.variants) document.getElementById('f-vars').value = data.variants;
+                if(data.blocks && Array.isArray(data.blocks)) { document.getElementById('modal-blocks-container').innerHTML = ''; data.blocks.forEach(b => window.addBlockUI(b.key, b.value)); }
+                window.showToast("✨ ¡Listo!");
+            } catch (e) { window.showToast("❌ Error IA"); }
+        };
+
+        window.generateLandingWithAI = async () => {
+            const name = document.getElementById('f-name').value.trim();
+            if (!name) return window.showToast("⚠️ Nombre primero");
+            window.showToast("✨ HTML...");
+            try {
+                const prompt = `Código HTML sin tags html/body para "Análisis Clínico Avanzado" de "${name}". Tailwind, minimalista text-blue-900. 3 beneficios. Solo HTML puro.`;
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const d = await res.json();
+                document.getElementById('f-landing').value = d.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
+                window.showToast("✨ Generado!");
+            } catch (e) { window.showToast("❌ Error HTML"); }
+        };
+
+        window.askAI = async (source = 'embedded') => {
+            const input = document.getElementById(source === 'embedded' ? 'ai-input-embedded' : 'ai-input-floating'); 
+            const msg = input.value.trim(); if(!msg) return;
+            const chat = document.getElementById(source === 'embedded' ? 'ai-messages-embedded' : 'ai-messages-floating');
+            chat.innerHTML += `<div class="bg-comfort text-white px-3 py-1.5 rounded-xl rounded-tr-none text-[9px] ml-auto w-fit max-w-[85%] shadow-sm font-bold text-right">${msg}</div>`;
+            input.value = ""; chat.scrollTop = chat.scrollHeight;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: `Contexto: ${aiSystemPrompt}. Cliente: ${msg}` }] }] }) });
+                const d = await res.json(); const rawText = d.candidates?.[0]?.content?.parts?.[0]?.text || "No pude procesarlo.";
+                const formattedText = `<p>${rawText.replace(/\n\n/g, '</p><p class="mt-1.5">').replace(/\n/g, '<br>')}</p>`;
+                let suggestionsHTML = "";
+                if(products.length > 0) {
+                    const selected = [...products].sort(() => 0.5 - Math.random()).slice(0, 2);
+                    suggestionsHTML = `<div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5"><span class="w-full text-[7px] font-black text-slate-400 uppercase tracking-widest">Sugerencias:</span>${selected.map(p => `<button onclick="window.openProductQuickView('${p.id}')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 rounded-md text-[8px] font-black uppercase transition text-left truncate max-w-full">${p.name}</button>`).join('')}</div>`;
+                }
+                chat.innerHTML += `<div class="bg-white px-3 py-2 rounded-xl rounded-tl-none border border-slate-100 shadow-sm text-[9px] text-slate-600 w-fit max-w-[95%] self-start flex flex-col gap-1 leading-relaxed font-medium">${formattedText}${suggestionsHTML}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } catch(e) { window.showToast("Error IA ❌"); }
+        };
+
+        function syncData() {
+            if (!currentUser) return;
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (sn) => {
+                products = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                if (products.length === 0 && !window.isSeeding) window.seedDatabase(); 
+                window.renderAdminProducts(); window.filterCatalogUI(); window.renderHome(); window.processDeepLink(); 
+            }, (error) => console.error("Error productos:", error));
+            
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'categories'), (sn) => {
+                categories = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.renderHome(); window.updateSelectors(); window.renderCatalogFilters(); window.renderAttrManager();
+            }, (error) => console.error("Error cats:", error));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'badges'), (sn) => {
+                badges = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.updateSelectors(); window.renderAttrManager();
+            }, (error) => console.error("Error badges:", error));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'templates'), (sn) => {
+                templates = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.renderAdminTemplates(); window.updateSelectors(); window.renderAttrManager();
+            }, (error) => console.error("Error templates:", error));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'policies'), (sn) => {
+                policies = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.renderAdminPolicies(); window.updateSelectors(); window.renderAttrManager();
+            }, (error) => console.error("Error policies:", error));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'faqs'), (sn) => {
+                faqs = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.renderAdminFaqs(); window.updateSelectors(); window.renderAttrManager();
+            }, (error) => console.error("Error FAQs:", error));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'pages'), (sn) => {
+                pages = sn.docs.map(d => ({id: d.id, ...d.data()}));
+                window.updateNav();
+                window.renderAdminPages(); 
+            }, (error) => console.error("Error páginas:", error));
+        }
+
+        const start = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+            else await signInAnonymously(auth);
+            onAuthStateChanged(auth, (user) => { currentUser = user; if (user) syncData(); });
+        };
+        start();
+    </script>
+</body>
+</html>
